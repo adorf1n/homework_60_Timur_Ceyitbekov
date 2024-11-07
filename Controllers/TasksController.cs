@@ -10,10 +10,32 @@ public class TasksController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index()
+    public IActionResult Index(string searchTitle, string searchPriority)
     {
-        return View(await _context.Tasks.ToListAsync());
+        Console.WriteLine("searchTitle: " + searchTitle);
+        Console.WriteLine("searchPriority: " + searchPriority);
+
+        var tasksQuery = _context.Tasks.AsQueryable();
+
+        if (!string.IsNullOrEmpty(searchTitle))
+        {
+            tasksQuery = tasksQuery.Where(t => t.Title.Contains(searchTitle));
+        }
+
+        if (!string.IsNullOrEmpty(searchPriority))
+        {
+            tasksQuery = tasksQuery.Where(t => t.Priority == searchPriority);
+        }
+
+        var sqlQuery = tasksQuery.ToQueryString();
+        Console.WriteLine("SQL Query: " + sqlQuery);  
+
+        var tasks = tasksQuery.ToList();
+
+        return View(tasks);
     }
+
+
 
     [HttpGet]
     public IActionResult Create()

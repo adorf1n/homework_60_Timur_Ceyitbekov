@@ -1,34 +1,72 @@
 ﻿@model IEnumerable<MyTask>
 
-<h2 class="text-center mb-4">Список задач</h2>
+@{
+    ViewData["Title"] = "Список задач";
+}
+
+<h1>Список задач</h1>
+
+<form method="get" class="form-inline mb-3">
+    <div class="form-group mr-2">
+        <label for="searchTitle" class="mr-2">Поиск по названию:</label>
+        <input type="text" id="searchTitle" name="searchTitle" class="form-control" value="@Context.Request.Query["searchTitle"]" />
+    </div>
+    <div class="form-group mr-2">
+        <label for="searchPriority" class="mr-2">Поиск по приоритету:</label>
+        <select id="searchPriority" name="searchPriority" class="form-control">
+            <option value="">Все</option>
+            <!option value="High" @(Context.Request.Query["searchPriority"] == "High" ? "selected" : "")>Высокий</!option>
+            <!option value="Medium" @(Context.Request.Query["searchPriority"] == "Medium" ? "selected" : "")>Средний</!option>
+            <!option value="Low" @(Context.Request.Query["searchPriority"] == "Low" ? "selected" : "")>Низкий</!option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Фильтровать</button>
+</form>
 
 <table class="table table-striped table-bordered">
-    <thead class="thead-dark">
+    <thead>
         <tr>
-            <th scope="col">№</th>
-            <th scope="col">Название</th>
-            <th scope="col">Приоритет</th>
-            <th scope="col">Статус</th>
-            <th scope="col">Действия</th>
+            <th>
+                <a href="@Url.Action("Index", new { sortOrder = ViewData["NameSortOrder"] as string })">
+                    Название
+                </a>
+            </th>
+            <th>
+                <a href="@Url.Action("Index", new { sortOrder = ViewData["PrioritySortOrder"] as string })">
+                    Приоритет
+                </a>
+            </th>
+            <th>
+                <a href="@Url.Action("Index", new { sortOrder = ViewData["StatusSortOrder"] as string })">
+                    Статус
+                </a>
+            </th>
+            <th>
+                <a href="@Url.Action("Index", new { sortOrder = ViewData["CreatedAtSortOrder"] as string })">
+                    Дата создания
+                </a>
+            </th>
+            <th>Действия</th>
         </tr>
     </thead>
     <tbody>
         @foreach (var task in Model)
         {
             <tr>
-                <td>@task.Id</td>
                 <td>@task.Title</td>
                 <td>@task.Priority</td>
                 <td>@task.Status</td>
+                <td>@task.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
                 <td>
-                    <a class="btn btn-info btn-sm" asp-action="Details" asp-route-id="@task.Id">Детали</a>
+                    <a href="@Url.Action("Details", new { id = task.Id })" class="btn btn-info btn-sm">Детали</a>
+
                     @if (task.Status == "Open")
                     {
-                        <a class="btn btn-warning btn-sm" asp-action="Close" asp-route-id="@task.Id">Закрыть</a>
+                        <a href="@Url.Action("Close", new { id = task.Id })" class="btn btn-warning btn-sm">Закрыть</a>
                     }
-                    @if (task.Status == "Closed")
+                    else
                     {
-                        <a class="btn btn-danger btn-sm" asp-action="Delete" asp-route-id="@task.Id" onclick="return confirm('Удалить задачу?')">Удалить</a>
+                        <a href="@Url.Action("Delete", new { id = task.Id })" class="btn btn-danger btn-sm">Удалить</a>
                     }
                 </td>
             </tr>
