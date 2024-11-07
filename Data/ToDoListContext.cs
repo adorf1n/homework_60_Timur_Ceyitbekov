@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
-public class ToDoListContext : DbContext
+public class ToDoListContext : IdentityDbContext<IdentityUser>
 {
     public ToDoListContext(DbContextOptions<ToDoListContext> options) : base(options) { }
 

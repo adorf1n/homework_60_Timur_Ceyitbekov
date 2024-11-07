@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 public class TasksController : Controller
@@ -10,6 +11,7 @@ public class TasksController : Controller
         _context = context;
     }
 
+    [Authorize]
     public IActionResult Index(string searchTitle, string searchPriority, string sortOrder)
     {
         Console.WriteLine("searchTitle: " + searchTitle);

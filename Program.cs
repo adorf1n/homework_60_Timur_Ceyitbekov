@@ -1,38 +1,47 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
-namespace WebApplication1
+public class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddDbContext<ToDoListContext>(options =>
+        builder.Services.AddDbContext<ToDoListContext>(options =>
             options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            builder.Services.AddControllersWithViews();
+        builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+        {
+            options.Password.RequireDigit = false;               
+            options.Password.RequireLowercase = false;           
+            options.Password.RequireNonAlphanumeric = false;     
+            options.Password.RequireUppercase = false;           
+            options.Password.RequiredLength = 4;                  
+            options.Password.RequiredUniqueChars = 1;            
+        })
+     .AddEntityFrameworkStores<ToDoListContext>()
+     .AddDefaultTokenProviders();
 
-            var app = builder.Build();
+        builder.Services.AddControllersWithViews();
 
-            if (!app.Environment.IsDevelopment())
-            {
-                app.UseExceptionHandler("/Home/Error");
-                app.UseHsts();
-            }
+        var app = builder.Build();
 
-            app.UseHttpsRedirection();
-            app.UseStaticFiles();
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseExceptionHandler("/Home/Error");
+            app.UseHsts();
+        }
 
-            app.UseRouting();
+        app.UseHttpsRedirection();
+        app.UseStaticFiles();
+        app.UseRouting();
+        app.UseAuthentication(); 
+        app.UseAuthorization();  
 
-            app.UseAuthorization();
-
-            app.MapControllerRoute(
+        app.MapControllerRoute(
             name: "default",
             pattern: "{controller=Tasks}/{action=Index}/{id?}");
 
-            app.Run();
-        }
+        app.Run();
     }
 }
