@@ -27,22 +27,22 @@
     <thead>
         <tr>
             <th>
-                <a href="@Url.Action("Index", new { sortOrder = ViewData["NameSortOrder"] as string })">
+                <a href="@Url.Action("Index", new { sortOrder = ViewData["TitleSortOrder"] })">
                     Название
                 </a>
             </th>
             <th>
-                <a href="@Url.Action("Index", new { sortOrder = ViewData["PrioritySortOrder"] as string })">
+                <a href="@Url.Action("Index", new { sortOrder = ViewData["PrioritySortOrder"] })">
                     Приоритет
                 </a>
             </th>
             <th>
-                <a href="@Url.Action("Index", new { sortOrder = ViewData["StatusSortOrder"] as string })">
+                <a href="@Url.Action("Index", new { sortOrder = ViewData["StatusSortOrder"] })">
                     Статус
                 </a>
             </th>
             <th>
-                <a href="@Url.Action("Index", new { sortOrder = ViewData["CreatedAtSortOrder"] as string })">
+                <a href="@Url.Action("Index", new { sortOrder = ViewData["CreatedAtSortOrder"] })">
                     Дата создания
                 </a>
             </th>

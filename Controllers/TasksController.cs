@@ -10,10 +10,11 @@ public class TasksController : Controller
         _context = context;
     }
 
-    public IActionResult Index(string searchTitle, string searchPriority)
+    public IActionResult Index(string searchTitle, string searchPriority, string sortOrder)
     {
         Console.WriteLine("searchTitle: " + searchTitle);
         Console.WriteLine("searchPriority: " + searchPriority);
+        Console.WriteLine("sortOrder: " + sortOrder);
 
         var tasksQuery = _context.Tasks.AsQueryable();
 
@@ -27,10 +28,46 @@ public class TasksController : Controller
             tasksQuery = tasksQuery.Where(t => t.Priority == searchPriority);
         }
 
+        switch (sortOrder)
+        {
+            case "Title_asc":
+                tasksQuery = tasksQuery.OrderBy(t => t.Title);
+                break;
+            case "Title_desc":
+                tasksQuery = tasksQuery.OrderByDescending(t => t.Title);
+                break;
+            case "Priority_asc":
+                tasksQuery = tasksQuery.OrderBy(t => t.Priority);
+                break;
+            case "Priority_desc":
+                tasksQuery = tasksQuery.OrderByDescending(t => t.Priority);
+                break;
+            case "Status_asc":
+                tasksQuery = tasksQuery.OrderBy(t => t.Status);
+                break;
+            case "Status_desc":
+                tasksQuery = tasksQuery.OrderByDescending(t => t.Status);
+                break;
+            case "CreatedAt_asc":
+                tasksQuery = tasksQuery.OrderBy(t => t.CreatedAt);
+                break;
+            case "CreatedAt_desc":
+                tasksQuery = tasksQuery.OrderByDescending(t => t.CreatedAt);
+                break;
+            default:
+                tasksQuery = tasksQuery.OrderBy(t => t.Title);  
+                break;
+        }
+
         var sqlQuery = tasksQuery.ToQueryString();
-        Console.WriteLine("SQL Query: " + sqlQuery);  
+        Console.WriteLine("SQL Query: " + sqlQuery);
 
         var tasks = tasksQuery.ToList();
+
+        ViewData["TitleSortOrder"] = sortOrder == "Title_asc" ? "Title_desc" : "Title_asc";
+        ViewData["PrioritySortOrder"] = sortOrder == "Priority_asc" ? "Priority_desc" : "Priority_asc";
+        ViewData["StatusSortOrder"] = sortOrder == "Status_asc" ? "Status_desc" : "Status_asc";
+        ViewData["CreatedAtSortOrder"] = sortOrder == "CreatedAt_asc" ? "CreatedAt_desc" : "CreatedAt_asc";
 
         return View(tasks);
     }
