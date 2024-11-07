@@ -1,23 +1,23 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using System.Security.Claims;
 
+[Authorize]
 public class TasksController : Controller
 {
     private readonly ToDoListContext _context;
+    private readonly UserManager<IdentityUser> _userManager;
 
-    public TasksController(ToDoListContext context)
+    public TasksController(ToDoListContext context, UserManager<IdentityUser> userManager)
     {
         _context = context;
+        _userManager = userManager;
     }
 
-    [Authorize]
-    public IActionResult Index(string searchTitle, string searchPriority, string sortOrder)
+    public async Task<IActionResult> Index(string searchTitle, string searchPriority, string sortOrder)
     {
-        Console.WriteLine("searchTitle: " + searchTitle);
-        Console.WriteLine("searchPriority: " + searchPriority);
-        Console.WriteLine("sortOrder: " + sortOrder);
-
         var tasksQuery = _context.Tasks.AsQueryable();
 
         if (!string.IsNullOrEmpty(searchTitle))
@@ -57,14 +57,11 @@ public class TasksController : Controller
                 tasksQuery = tasksQuery.OrderByDescending(t => t.CreatedAt);
                 break;
             default:
-                tasksQuery = tasksQuery.OrderBy(t => t.Title);  
+                tasksQuery = tasksQuery.OrderBy(t => t.Title);
                 break;
         }
 
-        var sqlQuery = tasksQuery.ToQueryString();
-        Console.WriteLine("SQL Query: " + sqlQuery);
-
-        var tasks = tasksQuery.ToList();
+        var tasks = await tasksQuery.ToListAsync();
 
         ViewData["TitleSortOrder"] = sortOrder == "Title_asc" ? "Title_desc" : "Title_asc";
         ViewData["PrioritySortOrder"] = sortOrder == "Priority_asc" ? "Priority_desc" : "Priority_asc";
@@ -74,8 +71,6 @@ public class TasksController : Controller
         return View(tasks);
     }
 
-
-
     [HttpGet]
     public IActionResult Create()
     {
@@ -84,18 +79,50 @@ public class TasksController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Title,Priority,Description,Assignee,Status")] MyTask myTask)
+    public async Task<IActionResult> Create([Bind("Title,Priority,Description")] MyTask myTask)
     {
-        if (ModelState.IsValid)
-        {
-            myTask.CreatedAt = DateTime.UtcNow;
 
-            _context.Add(myTask);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var currentUserName = User.Identity.Name;
+
+            Console.WriteLine("Creating task...");
+            Console.WriteLine($"Title: {myTask.Title}");
+            Console.WriteLine($"Priority: {myTask.Priority}");
+            Console.WriteLine($"Description: {myTask.Description}");
+            Console.WriteLine($"Current User ID: {currentUserId}");
+            Console.WriteLine($"Assigned User (AssigneeId): {currentUserId}");
+            Console.WriteLine($"Creator User (CreatorId): {currentUserId}");
+
+            myTask.AssigneeId = currentUserId;
+            myTask.Assignee = currentUserName;
+            myTask.CreatorId = currentUserId;
+            myTask.Creator = currentUserName;
+            myTask.CreatedAt = DateTime.UtcNow;
+            myTask.Status = "Open";
+
+            if (ModelState.IsValid)
+            {
+                _context.Add(myTask);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    Console.WriteLine($"ModelState Error: {error.ErrorMessage}");
+                }
+            }
         }
+
         return View(myTask);
     }
+
+
+
+
 
     public async Task<IActionResult> Details(int? id)
     {
@@ -115,12 +142,38 @@ public class TasksController : Controller
         return View(myTask);
     }
 
+    
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Assign(int id)
+    {
+        var task = await _context.Tasks.FindAsync(id);
+        if (task == null)
+        {
+            return NotFound();
+        }
+
+        var currentUserId = _userManager.GetUserId(User); 
+
+        if (task.AssigneeId != null) 
+        {
+            return Forbid(); 
+        }
+
+        task.AssigneeId = currentUserId;
+        task.Status = "In Progress";  
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction(nameof(Index));
+    }
+
+
     public async Task<IActionResult> Close(int id)
     {
         var task = await _context.Tasks.FindAsync(id);
         if (task == null) return NotFound();
 
-        task.Status = "Closed";
+        task.Status = "Closed"; 
         await _context.SaveChangesAsync();
         return RedirectToAction(nameof(Index));
     }

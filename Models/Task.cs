@@ -1,23 +1,18 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-[Table("Tasks")]
+﻿using Microsoft.AspNetCore.Identity;
+
 public class MyTask
 {
     public int Id { get; set; }
-
-    [Required]
     public string Title { get; set; }
-
-    [Required]
-    public string Priority { get; set; } 
-
-    [Required]
-    public string Status { get; set; } = "Open"; 
-
+    public string Priority { get; set; }
     public string Description { get; set; }
-
-    [Required]
-    public string Assignee { get; set; }
-
+    public string? Status { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    public string? AssigneeId { get; set; } 
+
+    public string? Assignee { get; set; }  
+
+    public string? CreatorId { get; set; } 
+    public string? Creator { get; set; }  
 }
